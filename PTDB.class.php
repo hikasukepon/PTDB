@@ -261,7 +261,7 @@ class PTDB {
 			$where = NULL;
 		}
 		$sql = $this->makeSelectSql($table, $one_field, $where, $options);
-		return $this->listAll($this->query($sql, $params), $options);
+		return $this->listAll($this->query($sql, $params), $one_field, $options);
 	}
 
 	function selectRow($table, $field=NULL, $key_value_where=array(), $options=array()) {
