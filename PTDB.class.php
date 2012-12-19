@@ -3,6 +3,7 @@ class PTDB {
 	var $table_prefix;
 	var $log_handler;
 	var $debug = FALSE;
+	static $type_map;
 
 	function __construct($table_prefix='') {
 		$this->table_prefix = $table_prefix;
@@ -12,6 +13,16 @@ class PTDB {
 			'error' => array(),
 			'warn' => array()
 		);
+		if (! PTDB::$type_map) {
+			PTDB::$type_map = array(
+				'i' => PDO::PARAM_INT,
+				's' => PDO::PARAM_STR,
+				'n' => PDO::PARAM_NULL,
+				'b' => PDO::PARAM_BOOL,
+				'lob' => PDO::PARAM_LOB,
+				'stmt' => PDO::PARAM_STMT
+			);
+		}
 	}
 
 	function connect($con, $user, $pass) {
@@ -34,16 +45,32 @@ class PTDB {
 				$stmt = $this->_d->prepare($sql);
 				if (is_array($params)) {
 					$k = key($params);
-					if (is_int($k)) {
+					if (is_int($k)) {	//fastest, but don't support parameter type
 						$i = 1;
 						foreach ($params as $v)
 							$stmt->bindValue($i++, $v);
-					} else {
-						foreach ($params as $k => $v)
-							$stmt->bindValue($k, $v);
+					} else {	//slowest, support parameter type.
+						foreach ($params as $k => $v) {
+							@list($k_name, $k_type) = explode(':', $k);
+							if ($k_type) {
+								$stmt->bindValue($k_name, $v, PTDB::$type_map[$k_type]);
+							} else {
+								$stmt->bindValue($k_name, $v);
+							}
+						}
 					}
-				} else {
-					$stmt->bindValue(1, $v);
+				} else {	//support parameter type(no support lob, stmt)
+					if (is_string($params)) {
+						$stmt->bindValue(1, $params, PDO::PARAM_STR);
+					} else if (is_int($params)) {
+						$stmt->bindValue(1, $params, PDO::PARAM_INT);
+					} else if (is_null($params)) {
+						$stmt->bindValue(1, $params, PDO::PARAM_NULL);
+					} else if (is_bool($params)) {
+						$stmt->bindValue(1, $params, PDO::PARAM_BOOL);
+					} else {
+						$stmt->bindValue(1, $params);
+					}
 				}
 				if ($this->debug)
 					$this->log($sql. ' ('.serialize($params).')', 'debug');
@@ -230,8 +257,8 @@ class PTDB {
 		return implode(',', $sql_array);
 	}
 
-	function escape($src) {
-		return $this->_d->quote($src);
+	function escape($src, $type=PDO::PARAM_STR) {
+		return $this->_d->quote($src, $type);
 	}
 
 	function begin() {
