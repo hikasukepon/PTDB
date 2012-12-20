@@ -6,6 +6,9 @@ Simplified PDO Wrapper class
 ### Support ###
 Only php5. (>=5.1.0)
 
+### Tested environment ###
+Only MySQL.
+
 ### Policy ###
 I dont like access modifier.
 
