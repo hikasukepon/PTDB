@@ -292,7 +292,7 @@ class PTDB {
 	}
 
 	function selectRow($table, $field=NULL, $key_value_where=array(), $options=array()) {
-		$options = array_merge($options, array('limit' => 1));
+		$options = array_merge(array('limit' => 1), $options);
 		$sql = $this->makeSelectSql($table, $field, $key_value_where, $options);
 		$ret = $this->getAll($sql, $this->getKeyValueParams($key_value_where), $options);
 		if (empty($ret))
@@ -305,7 +305,7 @@ class PTDB {
 			$options = $where;
 			$where = NULL;
 		}
-		$options = array_merge($options, array('limit' => 1));
+		$options = array_merge(array('limit' => 1), $options);
 		$sql = $this->makeSelectSql($table, $field, $where, $options);
 		$ret = $this->getAll($sql, $params, $options);
 		if (empty($ret))
