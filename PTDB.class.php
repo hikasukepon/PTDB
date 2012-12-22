@@ -28,6 +28,7 @@ class PTDB {
 	function connect($con, $user, $pass) {
 		try {
 			$this->_d = new PDO($con, $user, $pass);
+			//$this->_d->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$this->log('connected database to '.$con, 'info');
 		} catch (PDOException $e) {
 			var_dump('error?');
@@ -142,7 +143,7 @@ class PTDB {
 		$sql .= $this->escapeField($fields).' from `'.$this->getTableName($table).'`';
 		if (!empty($where)) {
 			if (is_array($where)) {
-				$sql .= ' where '.$this->getKeyValueSql($where);
+				$sql .= ' where '.$this->getKeyValueSql($where, ' and ');
 			} else {
 				$sql.=' where '.$where;
 			}
@@ -241,7 +242,7 @@ class PTDB {
 		return $ret;
 	}
 
-	function getKeyValueSql($key_value_map) {
+	function getKeyValueSql($key_value_map, $sep = ',') {
 		$sql_array = array();
 		foreach ($key_value_map as $k => $v) {
 			if (is_null($v)) {
@@ -254,7 +255,7 @@ class PTDB {
 				}
 			}
 		}
-		return implode(',', $sql_array);
+		return implode($sep, $sql_array);
 	}
 
 	function escape($src, $type=PDO::PARAM_STR) {
