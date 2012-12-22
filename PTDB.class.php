@@ -355,7 +355,7 @@ class PTDB {
 
 	function update($table, $key_value_map, $key_value_where=array()) {
 		$sql = 'update `'.$this->getTableName($table).'` set '.$this->getKeyValueSql($key_value_map);
-		$sql .= ' where '.$this->getKeyValueSql($key_value_where);
+		$sql .= ' where '.$this->getKeyValueSql($key_value_where, ' and ');
 		$params = array_merge(
 			$this->getKeyValueParams($key_value_map),
 			$this->getKeyValueParams($key_value_where)
@@ -374,7 +374,7 @@ class PTDB {
 
 	function delete($table, $key_value_where=array()) {
 		$sql = 'delete from `'.$this->getTableName($table).'`';
-		$sql .= ' where '.$this->getKeyValueSql($key_value_where);
+		$sql .= ' where '.$this->getKeyValueSql($key_value_where, ' and ');
 
 		return $this->execute($sql, $this->getKeyValueParams($key_value_where));
 	}
