@@ -3,6 +3,9 @@ PTDB
 
 Simplified PDO Wrapper class
 
+### Tutorial & Reference ###
+https://github.com/tsugehara/PTDB/wiki
+
 ### Support ###
 Only php5. (>=5.1.0)
 
