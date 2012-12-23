@@ -116,12 +116,19 @@ class PTDB {
 		return $ret;
 	}
 
-	function listAll($stmt, $one_field, $options = NULL) {
+	function listAll($stmt, $field, $options = NULL) {
 		if ($stmt === FALSE)
 			return FALSE;
 		$ret = array();
-		while ($row = $stmt->fetch(PDO::FETCH_ASSOC))
-			$ret[] = $row[$one_field];
+		$key_field = ($options && !empty($options['key_field'])) ? $options['key_field'] : NULL;
+		$data_field =  empty($options['data_field']) ? $field : $options['data_field'];
+		if ($key_field) {
+			while ($row = $stmt->fetch(PDO::FETCH_ASSOC))
+				$ret[$row[$key_field]] = $row[$data_field];
+		} else {
+			while ($row = $stmt->fetch(PDO::FETCH_ASSOC))
+				$ret[] = $row[$data_field];
+		}
 		return $ret;
 	}
 
@@ -140,7 +147,12 @@ class PTDB {
 		if (empty($where) && !empty($options['where']))
 			$where = $options['where'];
 
-		$sql .= $this->escapeField($fields).' from `'.$this->getTableName($table).'`';
+		$sql .= $this->escapeField($fields).' from ';
+		if (substr($table, 0, 1) == '^') {
+			$sql .= substr($table, 1);
+		} else {
+			$sql .= '`'.$this->getTableName($table).'`';
+		}
 		if (!empty($where)) {
 			if (is_array($where)) {
 				$sql .= ' where '.$this->getKeyValueSql($where, ' and ');
@@ -283,13 +295,16 @@ class PTDB {
 		return $this->getAll($sql, $params, $options);
 	}
 
-	function selectList($table, $one_field, $where=NULL, $params=array(), $options=NULL) {
+	function selectList($table, $field=NULL, $where=NULL, $params=array(), $options=NULL) {
 		if (is_array($where)) {
 			$options = $where;
 			$where = NULL;
 		}
-		$sql = $this->makeSelectSql($table, $one_field, $where, $options);
-		return $this->listAll($this->query($sql, $params), $one_field, $options);
+		$sql = $this->makeSelectSql($table, $field, $where, $options);
+		if (is_array($field) && empty($options['data_field']))
+			$field = current($field);
+
+		return $this->listAll($this->query($sql, $params), $field, $options);
 	}
 
 	function selectRow($table, $field=NULL, $key_value_where=array(), $options=array()) {
@@ -384,5 +399,10 @@ class PTDB {
 		$sql .= ' where '.($where ? $where : '1=1');
 
 		return $this->execute($sql, $params);
+	}
+
+	function hasTable($table) {
+		$ret = $this->getAll('show tables like ?', array($this->getTableName($table)));
+		return $ret ? TRUE : FALSE;
 	}
 }
