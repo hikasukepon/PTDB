@@ -28,10 +28,9 @@ class PTDB {
 	function connect($con, $user, $pass) {
 		try {
 			$this->_d = new PDO($con, $user, $pass);
-			//$this->_d->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$this->_d->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$this->log('connected database to '.$con, 'info');
 		} catch (PDOException $e) {
-			var_dump('error?');
 			$this->log($e->getMessage());
 		}
 	}
