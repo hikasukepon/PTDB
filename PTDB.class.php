@@ -25,6 +25,13 @@ class PTDB {
 		}
 	}
 
+	static function getInstance($table_prefix='') {
+		static $instance = NULL;
+		if (is_null($instance))
+			$instance = new PTDB($table_prefix);
+		return $instance;
+	}
+
 	function connect($con, $user, $pass) {
 		try {
 			$this->_d = new PDO($con, $user, $pass);
@@ -90,12 +97,13 @@ class PTDB {
 		}
 	}
 
-	function execute($sql, $params=array()) {
+	function execute($sql, $params=array(), $return_row_count=FALSE) {
 		$tmp_ret = $this->query($sql, $params);
 		if ($tmp_ret === FALSE)
 			return FALSE;
 
-		//return $tmp_ret->row_count() == 0 ? FALSE : TRUE;
+		if ($return_row_count)
+			return $tmp_ret->rowCount();
 
 		return TRUE;
 	}
@@ -403,5 +411,16 @@ class PTDB {
 	function hasTable($table) {
 		$ret = $this->getAll('show tables like ?', array($this->getTableName($table)));
 		return $ret ? TRUE : FALSE;
+	}
+
+	function safeLimit($limit) {
+		if (empty($limit))
+			return $limit;
+
+		$limits = explode(',', $limit);
+		if (count($limits) > 1)
+			return ((int)$limits[0]).','.((int)$limits[1]);
+
+		return ((int)$limits[0]);
 	}
 }
