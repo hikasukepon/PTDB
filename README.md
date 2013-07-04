@@ -98,3 +98,7 @@ $db->delete('users', array('id' => 1));
 //$db->selectList(...)
 ?>
 ```
+
+### Run on cloud9 ###
+1. $) mysql-ctl start
+2. Run test(or test-nodpdo).php
