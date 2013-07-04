@@ -1,8 +1,7 @@
 <?php
-//If server don't support PDO, you can use this class
 require_once('PTDB.class.php');
 class PTDBMySQL extends PTDB {
-	static function getInstance($table_prefix='') {
+    static function getInstance($table_prefix='') {
 		static $instance = NULL;
 		if (is_null($instance))
 			$instance = new PTDBMySQL($table_prefix);
@@ -31,33 +30,58 @@ class PTDBMySQL extends PTDB {
 	}
 
 	function buildQuery($sql, $params) {
-		$k = key($params);
-		$index = 0;
-		if (is_int($k)) {
-			foreach ($params as $v) {
-				$p = strpos($sql, '?', $index);
-				$val = "'".$this->escape($v)."'";
-				$index += strlen($val) - 1;
-				$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
-			}
-		} else {
-			foreach ($params as $v) {
-				$index += strlen($val) - 1;
-				$sql = substr($sql, 0, $p)."'".$val."'".substr($sql, $p+1);
-			}
-			foreach ($params as $k => $v) {
-				$p = strpos($sql, '?', $index);
-				@list($k_name, $k_type) = explode(':', $k);
-
-				if ($k_type && ($k_type == 'i' || $k_type == 'n')) {
-					$val = (int)$v;
-					$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
-				} else {
-					$val = "'".$this->escape($v)."'";
+		if (is_array($params)) {
+			$k = key($params);
+			$index = 0;
+			if (is_int($k)) {
+				foreach ($params as $v) {
+					$p = strpos($sql, '?', $index);
+					if ($p === FALSE) {
+						$this->log('parameter dont match. paramter count: '.count($params).', '.$sql, 'warn');
+						return $sql;
+					}
+					if (is_null($v)) {
+						$val = 'NULL';
+					} else {
+						$val = "'".$this->escape($v)."'";
+					}
+					$index += strlen($val) - 1;
 					$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
 				}
-				$index += strlen($val) - 1;
+			} else {
+				foreach ($params as $k => $v) {
+					$p = strpos($sql, '?', $index);
+					if ($p === FALSE) {
+						$this->log('parameter dont match. paramter count: '.count($params).', '.$sql, 'warn');
+						return $sql;
+					}
+					@list($k_name, $k_type) = explode(':', $k);
+
+					if ($k_type && $k_type == 'i') {
+						$val = (int)$v;
+					} else if ($k_type && $k_type == 'n') {
+						$val = 'NULL';
+					} else {
+						$val = "'".$this->escape($v)."'";
+					}
+					$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
+					$index += strlen($val) - 1;
+				}
 			}
+		} else {
+			$p = strpos($sql, '?', $index);
+			if ($p === FALSE) {
+				$this->log('parameter dont match. paramter count: '.count($params).', '.$sql, 'warn');
+				return $sql;
+			}
+			if (is_null($params)) {
+				$val = 'NULL';
+			} else if (is_numeric($params) && !is_string($params)) {
+				$val = $params;
+			} else {
+				$val = "'".$this->escape($params)."'";
+			}
+			$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
 		}
 		return $sql;
 	}
@@ -70,8 +94,6 @@ class PTDBMySQL extends PTDB {
 				} else {	//support parameter type(no support lob, stmt)
 					$sql = $this->buildQuery($sql, array($params));
 				}
-				if ($this->debug)
-					$this->log($sql. ' ('.serialize($params).')', 'debug');
 			}
 			if ($this->debug)
 				$this->log($sql);
@@ -148,6 +170,10 @@ class PTDBMySQL extends PTDB {
 		if ($tmp_ret === FALSE)
 			return $tmp_ret;
 
+		return $this->lastInsertId();
+	}
+
+	function lastInsertId() {
 		return $this->_d->insert_id;
 	}
 }

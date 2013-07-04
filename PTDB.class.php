@@ -1,6 +1,6 @@
 <?php
 class PTDB {
-	var $table_prefix;
+    var $table_prefix;
 	var $log_handler;
 	var $debug = FALSE;
 	static $type_map;
@@ -372,7 +372,7 @@ class PTDB {
 		if ($tmp_ret === FALSE)
 			return $tmp_ret;
 
-		return $this->_d->lastInsertId();
+		return $this->lastInsertId();
 	}
 
 	function update($table, $key_value_map, $key_value_where=array()) {
@@ -422,5 +422,9 @@ class PTDB {
 			return ((int)$limits[0]).','.((int)$limits[1]);
 
 		return ((int)$limits[0]);
+	}
+
+	function lastInsertId() {
+		return $this->_d->lastInsertId();
 	}
 }
