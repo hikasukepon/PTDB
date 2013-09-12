@@ -1,7 +1,7 @@
 <?php
 require_once('PTDB.class.php');
 class PTDBMySQL extends PTDB {
-    static function getInstance($table_prefix='') {
+	static function getInstance($table_prefix='') {
 		static $instance = NULL;
 		if (is_null($instance))
 			$instance = new PTDBMySQL($table_prefix);
@@ -45,7 +45,7 @@ class PTDBMySQL extends PTDB {
 					} else {
 						$val = "'".$this->escape($v)."'";
 					}
-					$index += strlen($val) - 1;
+					$index = $p + strlen($val);
 					$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
 				}
 			} else {
@@ -65,7 +65,7 @@ class PTDBMySQL extends PTDB {
 						$val = "'".$this->escape($v)."'";
 					}
 					$sql = substr($sql, 0, $p).$val.substr($sql, $p+1);
-					$index += strlen($val) - 1;
+					$index = $p + strlen($val);
 				}
 			}
 		} else {
